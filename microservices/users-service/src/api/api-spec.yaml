@@ -1,0 +1,567 @@
+openapi: '3.0.3'
+info:
+  version: 1.0.0
+  title: users-service
+  description: Service contract for users-service with OpenApi 3.0 specifications
+servers:
+  - url: 'http://localhost:8000/users/api'
+  - url: 'http://localhost:8012/api'
+  - url: 'http://18.217.249.183/users/api'
+tags:
+  - name: Health
+    description: Call to monitor the health of the service
+  - name: Users
+    description: Call to manage users
+  - name: Roles
+    description: Call to manage roles
+  - name: Sites
+    description: Call to manage sites
+  - name: Companies
+    description: Call to manage companies
+security:
+  - bearerAuth: []
+  - x-userinfo: []
+paths:
+  /health:
+    get:
+      description: Gets health of the service
+      tags:
+        - Health
+      security: []
+      responses:
+        200:
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /v1/users:
+    get:
+      description: Gets list of users
+      tags:
+        - Users
+      responses:
+        200:
+          description: Collection of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOfUsers'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /v1/users/search:
+    post:
+      description: Gets list of users
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        200:
+          description: Collection of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOfUsers'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /v1/users/{id}:
+    get:
+      description: Gets a user
+      parameters:
+        - name: id
+          in: path
+          description: ID of User
+          required: true
+          schema:
+            type: string
+      tags:
+        - Users
+      responses:
+        200:
+          description: Collection of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /v1/roles:
+    get:
+      description: Gets list of roles assignable to users
+      tags:
+        - Roles
+      responses:
+        200:
+          description: Collection of user roles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOfEmployeeRoles'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /v1/roles/search:
+    post:
+      description: Gets list of roles assignable to users
+      tags:
+        - employeeRoles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        200:
+          description: Collection of user roles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOfEmployeeRoles'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /v1/roles/{id}:
+    get:
+      description: Gets an employee role
+      parameters:
+        - name: id
+          in: path
+          description: ID of employee role
+          required: true
+          schema:
+            type: string
+      tags:
+        - Roles
+      responses:
+        200:
+          description: Collection of roles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeRole'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /v1/sites:
+    get:
+      description: Gets list of sites
+      tags:
+        - Sites
+      responses:
+        200:
+          description: Collection of sites
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOfCompanySites'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /v1/sites/search:
+    post:
+      description: Gets list of sites
+      tags:
+        - companySites
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        200:
+          description: Collection of sites
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOfCompanySites'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /v1/sites/{id}:
+    get:
+      description: Gets a list of sites available for a company
+      parameters:
+        - name: id
+          in: path
+          description: ID of company site
+          required: true
+          schema:
+            type: string
+      tags:
+        - Companies
+        - Sites
+      responses:
+        200:
+          description: Gets collection of available sites at a given company
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanySite'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /v1/companies:
+    get:
+      description: Gets list of companies the user can access
+      tags:
+        - Companies
+      responses:
+        200:
+          description: Gets collection of available companies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOfCompanies'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /v1/companies/{id}:
+    get:
+      description: Gets company info that user has access to.
+      parameters:
+        - name: id
+          in: path
+          description: ID of company
+          required: true
+          schema:
+            type: string
+      tags:
+        - Companies
+      responses:
+        200:
+          description: Gets the requested company data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: All requests against Kong Gateway must include the `Authorization` header containing your JWT Token.
+    x-userinfo:
+      type: apiKey
+      in: header
+      name: X-userinfo
+      description: All requests against a standalone microservice must include the `x-userinfo` header containing your encoded user ID.
+  schemas:
+    ErrorMessage:
+      required:
+        - message
+      properties:
+        type:
+          type: string
+        message:
+          type: string
+        property:
+          type: string
+        key:
+          type: string
+      example:
+        type: 'ValidationError'
+        message: 'Assignee 123456 is not from your site'
+        property: 'assignee'
+        key: 'highFive.submit.assigneeMustBeOnCurrentSite'
+    MessageResponse:
+      required:
+        - message
+      properties:
+        message:
+          type: string
+        extraInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorMessage'
+    ValidationErrors:
+      type: array
+      items:
+        $ref: '#/components/schemas/ErrorMessage'
+    PaginationMetadata:
+      properties:
+        currentPage:
+          type: integer
+          format: int32
+        totalPages:
+          type: integer
+          format: int32
+        count:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int32
+    CommonResourceMetadata:
+      properties:
+        _id:
+          type: string
+        __v:
+          type: number
+        _createdBy:
+          type: string
+        _createdOn:
+          type: string
+          format: date-time
+        _modifiedBy:
+          type: string
+        _modifiedOn:
+          type: string
+          format: date-time
+        _deleted:
+          type: boolean
+    ValidationErrorsAndPaginationMetadata:
+      properties:
+        validationErrors:
+          $ref: '#/components/schemas/ValidationErrors'
+        metadata:
+          $ref: '#/components/schemas/PaginationMetadata'
+    HealthCheckResponse:
+      required:
+        - serviceName
+        - status
+      properties:
+        serviceName:
+          type: string
+        status:
+          type: string
+        uptime:
+          type: number
+        timestamp:
+          type: string
+        pid:
+          type: integer
+          format: int32
+      example:
+        serviceName: 'Users Service'
+        status: 'OK'
+        uptime: 1250.34567
+        timestamp: 'Thu, 06 May 2021 22:00:17 GMT'
+        pid: 69560
+    SearchRequest:
+      required:
+        - where
+      properties:
+        where:
+          type: object
+    User:
+      required:
+        - companyId
+        - email
+        - roleId
+        - primaryCompanySiteId
+        - givenNames
+        - lastName
+      allOf:
+        - $ref: '#/components/schemas/CommonResourceMetadata'
+      properties:
+        companyId:
+          type: string
+        email:
+          type: string
+        roleId:
+          type: string
+        primaryCompanySiteId:
+          type: string
+        givenNames:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+      example:
+        isActive: true
+        _id: 'someId'
+        __v: 0
+        _createdBy: 'someUserId'
+        _createdOn: '2021-05-10T15:05:26.586Z'
+        _deleted: false
+        _externalId: '1231-41231-512'
+        _modifiedBy: 'some user'
+        _modifiedOn: '2021-05-10T15:05:26.586Z'
+        companyId: 'companyid'
+        email: 'tony.stark@avengers.com'
+        givenNames: 'Tony'
+        isSystemUser: false
+        lastName: 'Stark'
+        phoneNumber: '123-456-7890'
+        primaryCompanySiteId: 'someSiteId'
+        roleId: 'someRoleId'
+    ListOfUsers:
+      allOf:
+        - $ref: '#/components/schemas/ValidationErrorsAndPaginationMetadata'
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    EmployeeRole:
+      required:
+        - companyId
+        - roleName
+      allOf:
+        - $ref: '#/components/schemas/CommonResourceMetadata'
+      properties:
+        _externalId:
+          type: string
+        companyId:
+          type: string
+        description:
+          type: string
+        roleName:
+          type: string
+      example:
+        _id: 'pXioNg5c-'
+        __v: '0'
+        _createdBy: 'someUserId'
+        _createdOn: '2021-05-06T17:15:34.252Z'
+        _deleted: false
+        _externalId: 'fakeId:WF_apps/roles'
+        _modifiedBy: 'someUserId'
+        _modifiedOn: '2021-05-06T17:15:34.252Z'
+        companyId: 'someCompanyId'
+        description: 'A supervisor who oversees client site individuals'
+        roleName: 'Supervisor'
+    ListOfEmployeeRoles:
+      allOf:
+        - $ref: '#/components/schemas/ValidationErrorsAndPaginationMetadata'
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmployeeRole'
+    CompanySite:
+      required:
+        - companyId
+        - companySiteName
+      allOf:
+        - $ref: '#/components/schemas/CommonResourceMetadata'
+      properties:
+        _externalId:
+          type: string
+        companyId:
+          type: string
+        companySiteAddressId:
+          type: string
+          x-nullable: true
+        companySiteName:
+          type: string
+        description:
+          type: string
+        parentCompanySiteId:
+          type: string
+          x-nullable: true
+      example:
+        _id: 'HwpNHIOoMZ'
+        __v: 0,
+        _createdBy: '@System'
+        _createdOn: '2021-05-06T17:15:34.232Z'
+        _deleted: false
+        _externalId: 'HwpNHIOoMZ:WF_apps/clientSites'
+        _modifiedBy: '@System'
+        _modifiedOn: '2021-05-06T17:15:34.232Z'
+        companyId: 'kAx4oWodX'
+        companySiteAddressId: null
+        companySiteName: 'Toronto'
+        description: ''
+        parentCompanySiteId: 'someId'
+    ListOfCompanies:
+      allOf:
+        - $ref: '#/components/schemas/ValidationErrorsAndPaginationMetadata'
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Company'
+    Company:
+      required:
+        - companyName
+      allOf:
+        - $ref: '#/components/schemas/CommonResourceMetadata'
+      properties:
+        companyName:
+          type: string
+        companyAddressId:
+          type: string
+        companyContactName:
+          type: string
+        companyContactEmail:
+          type: string
+        companyContactPhone:
+          type: string
+      example:
+        _id: 'kAx4oWodX'
+        __v: 0,
+        _createdBy: '@System'
+        _createdOn: '2021-05-06T17:15:34.232Z'
+        _deleted: false
+        _externalId: 'kAx4oWodX:WF_apps/clients'
+        _modifiedBy: '@System'
+        _modifiedOn: '2021-05-06T17:15:34.232Z'
+        companyName: 'Acme Inc.'
+        companyAddressId: 'someId312'
+        companyContactName: 'John Doe'
+        companyContactEmail: 'john.doe@acme.com'
+        companyContactPhone: '(123) 456-1234'
+    ListOfCompanySites:
+      allOf:
+        - $ref: '#/components/schemas/ValidationErrorsAndPaginationMetadata'
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanySite'

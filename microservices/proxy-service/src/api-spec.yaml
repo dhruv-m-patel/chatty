@@ -1,0 +1,210 @@
+openapi: '3.0.3'
+info:
+  version: 1.0.0
+  title: proxy-service
+  description: Service contract for proxy-service with OpenApi 3.0 specifications
+servers:
+  - url: 'http://localhost:8000/proxy/api'
+  - url: 'http://localhost:8015/api'
+  - url: 'http://18.217.249.183/proxy/api'
+tags:
+  - name: Health
+    description: Call to monitor the health of the service
+  - name: Users
+    description: Call to manage users
+security:
+  - bearerAuth: []
+  - x-userinfo: []
+paths:
+  /health:
+    get:
+      description: Gets health of the service
+      tags:
+        - Health
+      security: []
+      responses:
+        200:
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /v1/users:
+    get:
+      description: Gets list of users
+      tags:
+        - Users
+      responses:
+        200:
+          description: Collection of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOfUsers'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: All requests against Kong Gateway must include the `Authorization` header containing your JWT Token.
+    x-userinfo:
+      type: apiKey
+      in: header
+      name: X-userinfo
+      description: All requests against a standalone microservice must include the `x-userinfo` header containing your encoded user ID.
+  schemas:
+    ErrorMessage:
+      required:
+        - message
+      properties:
+        type:
+          type: string
+        message:
+          type: string
+        property:
+          type: string
+        key:
+          type: string
+      example:
+        type: 'ValidationError'
+        message: 'Assignee 123456 is not from your site'
+        property: 'assignee'
+        key: 'highFive.submit.assigneeMustBeOnCurrentSite'
+    MessageResponse:
+      required:
+        - message
+      properties:
+        message:
+          type: string
+        extraInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorMessage'
+    ValidationErrors:
+      type: array
+      items:
+        $ref: '#/components/schemas/ErrorMessage'
+    PaginationMetadata:
+      properties:
+        currentPage:
+          type: integer
+          format: int32
+        totalPages:
+          type: integer
+          format: int32
+        count:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int32
+    CommonResourceMetadata:
+      properties:
+        _id:
+          type: string
+        __v:
+          type: number
+        _createdBy:
+          type: string
+        _createdOn:
+          type: string
+          format: date-time
+        _modifiedBy:
+          type: string
+        _modifiedOn:
+          type: string
+          format: date-time
+        _deleted:
+          type: boolean
+    ValidationErrorsAndPaginationMetadata:
+      properties:
+        validationErrors:
+          $ref: '#/components/schemas/ValidationErrors'
+        metadata:
+          $ref: '#/components/schemas/PaginationMetadata'
+    HealthCheckResponse:
+      required:
+        - serviceName
+        - status
+      properties:
+        serviceName:
+          type: string
+        status:
+          type: string
+        uptime:
+          type: number
+        timestamp:
+          type: string
+        pid:
+          type: integer
+          format: int32
+      example:
+        serviceName: 'Users Service'
+        status: 'OK'
+        uptime: 1250.34567
+        timestamp: 'Thu, 06 May 2021 22:00:17 GMT'
+        pid: 69560
+    User:
+      required:
+        - companyId
+        - email
+        - roleId
+        - primaryCompanySiteId
+        - givenNames
+        - lastName
+      allOf:
+        - $ref: '#/components/schemas/CommonResourceMetadata'
+      properties:
+        companyId:
+          type: string
+        email:
+          type: string
+        roleId:
+          type: string
+        primaryCompanySiteId:
+          type: string
+        givenNames:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+      example:
+        isActive: true
+        _id: 'someId'
+        __v: 0
+        _createdBy: 'someUserId'
+        _createdOn: '2021-05-10T15:05:26.586Z'
+        _deleted: false
+        _externalId: '1231-41231-512'
+        _modifiedBy: 'some user'
+        _modifiedOn: '2021-05-10T15:05:26.586Z'
+        companyId: 'companyid'
+        email: 'tony.stark@avengers.com'
+        givenNames: 'Tony'
+        isSystemUser: false
+        lastName: 'Stark'
+        phoneNumber: '123-456-7890'
+        primaryCompanySiteId: 'someSiteId'
+        roleId: 'someRoleId'
+    ListOfUsers:
+      allOf:
+        - $ref: '#/components/schemas/ValidationErrorsAndPaginationMetadata'
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'

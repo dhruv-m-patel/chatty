@@ -1,0 +1,35 @@
+name: deploy
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: 'Host to connect to'
+        required: true
+        default: '18.217.249.183'
+      user:
+        description: 'User at host'
+        required: true
+        default: 'admin'
+      repo_dir:
+        description: 'Repository directory on host'
+        required: true
+        default: '/home/admin/services'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: fifsky/ssh-action@master
+        with:
+          host: ${{ github.event.inputs.host }}
+          user: ${{ github.event.inputs.user }}
+          key: ${{ secrets.DEPLOY_PRIVATE_KEY}}
+          command: |
+            cd ${{ github.event.inputs.repo_dir }}/.deploy
+            GITHUB_REF=${{ github.ref }}
+            BRANCH=${GITHUB_REF##*/}
+            echo "Checking out branch $BRANCH..."
+            git fetch
+            git checkout $BRANCH
+            git pull origin $BRANCH:$BRANCH
+            ./up.sh

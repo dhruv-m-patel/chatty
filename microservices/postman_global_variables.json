@@ -1,0 +1,44 @@
+{
+  "id": "cea47f9d-0d44-402b-84a4-f88f77ba7d58",
+  "values": [
+    {
+      "key": "kongHighFiveHost",
+      "value": "http://localhost:8000/high-fives/api",
+      "enabled": true
+    },
+    {
+      "key": "accessToken",
+      "value": "tokenGoesHere",
+      "enabled": true
+    },
+    {
+      "key": "kongAuthHost",
+      "value": "http://localhost:8000/auth/api",
+      "enabled": true
+    },
+    {
+      "key": "kongUsersHost",
+      "value": "http://localhost:8000/users/api",
+      "enabled": true
+    },
+    {
+      "key": "authServiceHost",
+      "value": "http://localhost:8010/api",
+      "enabled": true
+    },
+    {
+      "key": "highFiveServiceHost",
+      "value": "http://localhost:8011/api",
+      "enabled": true
+    },
+    {
+      "key": "usersServiceHost",
+      "value": "http://localhost:8012/api",
+      "enabled": true
+    }
+  ],
+  "name": "Team Workspace Globals",
+  "_postman_variable_scope": "globals",
+  "_postman_exported_at": "2021-05-13T14:58:29.911Z",
+  "_postman_exported_using": "Postman/8.4.0"
+}

@@ -1,0 +1,312 @@
+openapi: 3.0.1
+info:
+  title: entity-history-service
+  description: Service contract for entity-history-service with OpenAPI 3.0 specifications
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8000/entity-history/api'
+  - url: 'http://localhost:8040/api'
+  - url: 'http://18.217.249.183/entity-history/api'
+tags:
+  - name: Entity History
+    description: Calls to get history of entity
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      security: []
+      tags:
+        - Health
+      description: Gets health of the service
+      responses:
+        200:
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/history/{id}:
+    get:
+      tags:
+        - History
+      summary: Get History of entity. Pagination available
+      description: Returns an array of history objects for an entity
+      parameters:
+        - name: x-entity
+          in: header
+          description: Type of Entity
+          required: true
+          schema:
+            $ref: '#/components/schemas/EntityHeader'
+        - name: id
+          in: path
+          description: ID of Entity
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The number of the page
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          description: The numbers of items to return per page.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityHistoryListResponse'
+        404:
+          description: High Five not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - History
+      summary: Insert a history object for the entity
+      description: Inserts a history record
+      parameters:
+        - name: id
+          in: path
+          description: ID of Entity
+          required: true
+          schema:
+            type: string
+        - name: x-entity
+          in: header
+          description: Type of Entity
+          required: true
+          schema:
+            $ref: '#/components/schemas/EntityHeader'
+      requestBody:
+        description: High Five Object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntityHistoryBody'
+        required: true
+      responses:
+        201:
+          description: History Object Added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityHistoryResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: High Five not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: All requests against Kong Gateway must include the `Authorization` header containing your JWT Token.
+  schemas:
+    EntityHeader:
+      type: string
+      description: All requests must have the entity that they are requesting the history of.
+    ExtendedErrorInfo:
+      required:
+        - message
+      type: object
+      properties:
+        message:
+          type: string
+        type:
+          type: string
+        key:
+          type: string
+        property:
+          type: string
+    Error:
+      required:
+        - message
+      type: object
+      properties:
+        extraInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExtendedErrorInfo'
+        message:
+          type: string
+    HealthCheckResponse:
+      required:
+        - serviceName
+        - status
+      type: object
+      properties:
+        serviceName:
+          type: string
+        status:
+          type: string
+        uptime:
+          type: number
+        timestamp:
+          type: string
+        pid:
+          type: integer
+          format: int32
+    EntityHistoryBody:
+      required:
+        - trackedEntityId
+        - updatedDocument
+        - previousDocument
+        - operation
+        - entityType
+      properties:
+        trackedEntityId:
+          type: string
+        previousDocument:
+          type: object
+        updatedDocument:
+          type: object
+        operation:
+          type: string
+          enum: [create, delete, update]
+        entityType:
+          type: string
+      example:
+        entityType: highFiveNote
+        operation: create
+        trackedEntityId: a3b2d54f-e3d5-49a5-9fde-107ce4e34c91
+        previousDocument:
+          content: 'test old description'
+          _id: a3b2d54f-e3d5-49a5-9fde-107ce4e34c91
+          _createdOn: 2021-05-10T16:36:06.326Z
+          _createdBy: 61087fbe-958a-4e21-865e-910c57141a91
+          _modifiedOn: 2021-05-10T15:36:06.326Z
+          _modifiedBy: c6681ac5-224c-479e-994b-44dbc3cc3f36
+          _deleted: false
+        updatedDocument:
+          content: 'test description'
+          _id: a3b2d54f-e3d5-49a5-9fde-107ce4e34c91
+          _createdOn: 2021-05-10T16:36:06.326Z
+          _createdBy: 61087fbe-958a-4e21-865e-910c57141a91
+          _modifiedOn: 2021-05-10T15:36:06.326Z
+          _modifiedBy: c6681ac5-224c-479e-994b-44dbc3cc3f36
+          _deleted: false
+    EntityHistoryListResponse:
+      required:
+        - documents
+        - metadata
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityHistoryResponse'
+        metadata:
+          $ref: '#/components/schemas/MetaData'
+    EntityHistoryResponse:
+      required:
+        - trackedEntityId
+        - changedBy
+        - changedOn
+        - operation
+        - changedFields
+        - entityType
+        - _id
+        - version
+      properties:
+        _id:
+          type: string
+        changedOn:
+          type: string
+        changedBy:
+          type: string
+        trackedEntityId:
+          type: string
+        operation:
+          type: string
+          enum: [create, delete, update]
+        changedFields:
+          type: array
+          items:
+            properties:
+              fieldName:
+                type: string
+              oldValue:
+                anyOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+                  - nullable: true
+              newValue:
+                anyOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+                  - nullable: true
+        entityType:
+          type: string
+      example:
+        _id: 849cfb26-cba9-464f-8904-fc5c86b30aea
+        changedOn: 2021-05-10T16:36:06.326Z
+        changedBy: 61087fbe-958a-4e21-865e-910c57141a91
+        entityType: highFiveNote
+        operation: create
+        version: 1
+        changedFields:
+          - fieldName: 'content'
+            oldValue: null
+            newValue: 'test description'
+        trackedEntityId: a3b2d54f-e3d5-49a5-9fde-107ce4e34c91
+    MetaData:
+      required:
+        - current_page_size
+        - page_number
+        - page_size
+        - total_documents_count
+        - total_pages
+      type: object
+      properties:
+        total_documents_count:
+          type: number
+          description: Total number of documents available to read
+        page_number:
+          type: number
+          description: Current Page Number
+        page_size:
+          type: number
+          description: Maximum number of elements per page
+        current_page_size:
+          type: number
+          description: Total elements on the current page requested
+        total_pages:
+          type: number
+          description: Total

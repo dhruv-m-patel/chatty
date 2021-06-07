@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./build",
+    "types": ["node"],
+    "esModuleInterop": true,
+    "typeRoots": ["node_modules/@types", "node_modules/@alcumus"]
+  },
+  "include": ["./src"],
+  "exclude": ["./tests", "node_modules"]
+}

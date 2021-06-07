@@ -1,0 +1,35 @@
+FROM node:14.15-slim
+
+# Set work directory for container to mount contents
+WORKDIR /usr/app
+
+# Copy all packages
+COPY ./packages ./packages
+
+# Copy the microservice that needs to be containerized
+COPY ./microservices/awesome-service ./microservices/awesome-service
+
+# Copy root configurations to build packages and run the service
+COPY ./package.json .
+COPY ./lerna.json .
+COPY tsconfig.json .
+COPY jest.config.js .
+COPY jest.config.base.js .
+
+# Copy the environment variables
+COPY .env.example .env
+
+# Install root level package dependencies i.e. Lerna
+RUN npm install
+
+# Install package dependencies across all packages and service
+RUN npm run bootstrap
+
+# Build all packages and the service
+RUN npm run build
+
+# Expose the port that the service will be communicating on
+EXPOSE 8012
+
+# Start the service
+CMD ["npm", "start"]

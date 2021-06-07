@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/temp" />
+      <excludeFolder url="file://$MODULE_DIR$/.tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/express-app/build" />
+      <excludeFolder url="file://$MODULE_DIR$/microservices/proxy-service/build" />
+      <excludeFolder url="file://$MODULE_DIR$/microservices/high-five-service/build" />
+      <excludeFolder url="file://$MODULE_DIR$/microservices/auth-service/build" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/express-middlewares/build" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/service-mesh-plugin/build" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/response-utils/build" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/platform-extractors/build" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/mongoose-lib/build" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/messaging-lib/build" />
+      <excludeFolder url="file://$MODULE_DIR$/microservices/users-service/build" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

@@ -1,0 +1,292 @@
+openapi: '3.0.3'
+info:
+  version: 1.0.0
+  title: auth-service
+  description: Service contract for auth-service with OpenApi 3.0 specifications
+servers:
+  - url: 'http://localhost:8000/auth/api'
+  - url: 'http://localhost:8010/api'
+  - url: 'http://18.217.249.183/auth/api'
+tags:
+  - name: Health
+    description: Call to monitor the health of the service
+  - name: Login
+    description: Calls to authenticate users
+  - name: Token Refresh
+    description: Calls to refresh outdated session token
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      description: Gets health of the service
+      responses:
+        200:
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/login/passthrough:
+    post:
+      description: Verifies login credentials for an alcumus-platform user.  Returns exact same structure as Alcumus Platform.
+      tags:
+        - Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Credentials are valid, access token and refresh token are provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlcumusPlatformLoginResponse'
+        400:
+          description: Username or password was not provided in request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: User is unauthorized to access the account
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/login:
+    post:
+      tags:
+        - Login
+      description: Verifies login credentials for an alcumus-platform user. Flattened structure, not like Alcumus Platform.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Credentials are valid, access token and refresh token are provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        400:
+          description: Username or password was not provided in request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: User is unauthorized to access the account
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/refresh:
+    post:
+      tags:
+        - Token Refresh
+      description: Gives the user a new access token to stay logged in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        200:
+          description: Refresh token was valid, new access token and refresh token are provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        400:
+          description: Refresh token was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: Refresh token was invalid, user is not allowed to use current token.
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/logout:
+    post:
+      tags:
+        - Token
+      description: Ends the current session so it can't be used to make more requests.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        200:
+          description: Logout valid, but server does not have a redirect uri for the user.
+        302:
+          description: Logout valid, and user can log in at the specified redirect uri
+        400:
+          description: Refresh token was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: Auth token was invalid or expired, which prevented logout.
+        default:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    ExtendedErrorInfo:
+      required:
+        - message
+      properties:
+        message:
+          type: string
+        type:
+          type: string
+        key:
+          type: string
+        property:
+          type: string
+    Error:
+      required:
+        - message
+      properties:
+        message:
+          type: string
+        extraInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExtendedErrorInfo'
+    HealthCheckResponse:
+      required:
+        - serviceName
+        - status
+      properties:
+        serviceName:
+          type: string
+        status:
+          type: string
+        uptime:
+          type: number
+        timestamp:
+          type: string
+        pid:
+          type: integer
+          format: int32
+    LoginRequest:
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    RefreshTokenResponse:
+      required:
+        - access_token
+        - refresh_token
+        - token_type
+        - expires_at
+        - refresh_expires_at
+      properties:
+        access_token:
+          type: string
+        expires_at:
+          type: number
+        refresh_token:
+          type: string
+        refresh_expires_at:
+          type: number
+        token_type:
+          type: string
+          enum:
+            - bearer
+    LoginResponse:
+      required:
+        - access_token
+        - refresh_token
+        - token_type
+        - expires_at
+        - refresh_expires_at
+        - id
+        - lastLoggedIn
+        - name
+        - email
+      properties:
+        access_token:
+          type: string
+        expires_at:
+          type: number
+        refresh_token:
+          type: string
+        refresh_expires_at:
+          type: number
+        token_type:
+          type: string
+          enum:
+            - bearer
+        id:
+          type: string
+        lastLoggedIn:
+          type: number
+        migrated:
+          type: boolean
+        name:
+          type: string
+        email:
+          type: string
+    RefreshTokenRequest:
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+    AlcumusPlatformLoginResponse:
+      required:
+        - client
+      properties:
+        ok:
+          type: boolean
+        processed:
+          type: array
+        notAuthorised:
+          type: object
+        errors:
+          type: array
+        client:
+          required:
+            - data
+          properties:
+            events:
+              type: array
+            notifications:
+              type: array
+            data:
+              $ref: '#/components/schemas/LoginResponse'

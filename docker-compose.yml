@@ -1,0 +1,118 @@
+version: '3'
+
+volumes:
+  linkerd-disco:
+  wildbreeze-kong-db-volume:
+  # External so that it's created and managed outside of this compose file's lifecycle
+  wildbreeze-mongodb-volume:
+    external: true
+  wildbreeze-mysql-volume:
+    external: true
+
+services:
+  wildbreeze-kong-db:
+    image: postgres:11-alpine
+    volumes:
+      - wildbreeze-kong-db-volume:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: api-gw
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong
+
+  wildbreeze-kong:
+    container_name: wildbreeze-kong
+    build:
+      context: .
+      dockerfile: ./microservices/kong-gateway/Dockerfile
+    depends_on:
+      - wildbreeze-kong-db
+    volumes:
+      - ${PWD}/kong.yml:/usr/src/kong.yml
+    ports:
+      - '${KONG_LISTENER_PORT:-8000}:8000' # Listener
+      - '8001:8001' # Admin API
+      - '${KONG_LISTENER_SSL_PORT:-8443}:8443' # Listener  (SSL)
+      - '8444:8444' # Admin API (SSL)
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: wildbreeze-kong-db
+      KONG_PG_PORT: 5432
+      KONG_PG_DATABASE: api-gw
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+      KONG_PLUGINS: bundled,oidc
+      KONG_LOG_LEVEL: debug
+    healthcheck:
+      test: ['CMD', 'kong', 'health']
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    command: /usr/src/kong.yml
+
+  # Developer Dependencies
+  wildbreeze-konga:
+    image: pantsel/konga:0.14.7
+    depends_on:
+      - wildbreeze-kong
+    ports:
+      - '1337:1337' # konga
+    environment:
+      DB_ADAPTER: postgres
+      DB_HOST: wildbreeze-kong-db
+      DB_PORT: '5432'
+      DB_USER: kong
+      DB_PASSWORD: kong
+      DB_DATABASE: api-gw
+      NODE_ENV: development
+
+  # mySQL Database Container
+  wildbreeze-mysql:
+    image: mysql:8.0.25
+    ports:
+      - '3307:3306'
+    volumes:
+      - wildbreeze-mysql-volume:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Safety123!!!
+
+  # linkerd
+  wildbreeze-linkerd:
+    image: buoyantio/linkerd:1.4.6
+    ports:
+      - '4140:4140'
+      - '9990:9990'
+    environment:
+      DISCO_USERS: |
+        host.docker.internal 8012
+    # we must mount the config file and the disco directory
+    volumes:
+      - ./linkerd.yaml:/io.buoyant/linkerd.yaml:ro
+      - linkerd-disco:/io.buoyant/disco
+    entrypoint: ''
+    command: >
+      /bin/bash -c 'echo "$$DISCO_USERS" > /io.buoyant/disco/users &&
+      ./bundle-exec /io.buoyant/linkerd.yaml'
+
+  # MongoDB Database container
+  wildbreeze-mongodb:
+    image: mongo:latest
+    ports:
+      - '27017:27017'
+    volumes:
+      - wildbreeze-mongodb-volume:/data/db
+
+  # RabbitMQ Container
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq

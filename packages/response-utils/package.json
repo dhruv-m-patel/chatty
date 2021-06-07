@@ -1,0 +1,23 @@
+{
+  "name": "@alcumus/response-utils",
+  "version": "0.0.5",
+  "description": "A library for expressing utility functionality that will be used across services",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "jest --silent",
+    "build": "rimraf ./build && tsc"
+  },
+  "keywords": [
+    "utils",
+    "utilities"
+  ],
+  "devDependencies": {
+    "jest": "26.6.0",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^26.5.4",
+    "ts-mockito": "^2.6.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4"
+  },
+  "private": true
+}

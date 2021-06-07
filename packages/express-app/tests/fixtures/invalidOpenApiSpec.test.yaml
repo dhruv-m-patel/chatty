@@ -1,0 +1,15 @@
+openapi: '3.0.3'
+info:
+  version: 1.0.0
+  title: Valid API Contract Testing
+  description: Service contract to test the finalErrorHandler using OpenAPI validations.
+paths:
+  /test:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              # notice that this reference cannot be resolved
+              $ref: '#/components/schemas/TestRequest'

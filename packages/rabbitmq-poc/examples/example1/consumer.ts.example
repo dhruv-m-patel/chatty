@@ -1,0 +1,22 @@
+import { getMessageBroker, MessageBroker, ConsumeMessage } from '../index';
+const url = 'amqp://localhost';
+const exch = 'test_exchange3';
+const rkey = ['HighFive Created', 'HighFive Updated'];
+function handler(msg: ConsumeMessage) {
+  console.log('topic: ', msg.fields.routingKey);
+  console.log('content: ', msg.content);
+}
+/**
+ * this function recieves messages that are related to two routing keys (topics) and logs them to ther console.
+ * @param args
+ */
+async function doConsume(args: any) {
+  const { url, rkey, exch } = args;
+  const messageBroker: MessageBroker = await getMessageBroker(url);
+  await messageBroker.consume(exch, rkey, handler);
+  setTimeout(function () {
+    messageBroker.close();
+  }, 6000);
+}
+
+doConsume({ url, exch, rkey });

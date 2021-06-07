@@ -1,0 +1,150 @@
+version: '3'
+
+volumes:
+  rabbitmq-lib-volume:
+  rabbitmq-log-volume:
+  linkerd-disco:
+  wildbreeze-kong-db-volume:
+  wildbreeze-mongodb-volume:
+    external: true
+  wildbreeze-mysql-volume:
+    external: true
+
+services:
+  # Database container
+  wildbreeze-mongodb:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    volumes:
+      - wildbreeze-mongodb-volume:/data/db
+
+  wildbreeze-mysql:
+    image: mysql:8.0.25
+    ports:
+      - '3307:3306'
+    volumes:
+      - wildbreeze-mysql-volume:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Safety123!!!
+
+  # linkerd
+  wildbreeze-linkerd:
+    image: buoyantio/linkerd:1.4.6
+    ports:
+      - '4140:4140'
+      - '9990:9990'
+    environment:
+      DISCO_USERS: |
+        users-service 8012
+    # we must mount the config file and the disco directory
+    volumes:
+      - ../linkerd.yaml:/io.buoyant/linkerd.yaml:ro
+      - linkerd-disco:/io.buoyant/disco/
+    entrypoint: ''
+    command: >
+      /bin/bash -c 'echo "$$DISCO_USERS" > /io.buoyant/disco/users &&
+      ./bundle-exec /io.buoyant/linkerd.yaml'
+
+  wildbreeze-kong-db:
+    image: postgres:11-alpine
+    volumes:
+      - wildbreeze-kong-db-volume:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: api-gw
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong
+
+  wildbreeze-kong:
+    image: ${KONG_IMAGE:?err}
+    depends_on:
+      - wildbreeze-kong-db
+    ports:
+      - '${KONG_LISTENER_PORT:-8000}:8000' # Listener
+      - '8001:8001' # Admin API
+      - '${KONG_LISTENER_SSL_PORT:-8443}:8443' # Listener  (SSL)
+      - '8444:8444' # Admin API (SSL)
+    volumes:
+      - ${PWD}/kong.yml:/usr/src/kong.yml
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: wildbreeze-kong-db
+      KONG_PG_PORT: 5432
+      KONG_PG_DATABASE: api-gw
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+      KONG_PLUGINS: bundled,oidc
+      KONG_LOG_LEVEL: debug
+    healthcheck:
+      test: ['CMD', 'kong', 'health']
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    command: /usr/src/kong.yml
+    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  wildbreeze-konga:
+    image: pantsel/konga:0.14.7
+    depends_on:
+      - wildbreeze-kong
+    ports:
+      - '1337:1337' # konga
+    environment:
+      DB_ADAPTER: postgres
+      DB_HOST: wildbreeze-kong-db
+      DB_PORT: '5432'
+      DB_USER: kong
+      DB_PASSWORD: kong
+      DB_DATABASE: api-gw
+      NODE_ENV: development
+
+  # Auth Service Containers
+  auth-service:
+    image: ${AUTH_SERVICE_IMAGE:?err}
+
+  # High Five Service Containers
+  high-five-service:
+    image: ${HIGH_FIVE_SERVICE_IMAGE:?err}
+    environment:
+      SERVICE_MESH_HOST: http://wildbreeze-linkerd:4140
+    depends_on:
+      - wildbreeze-mongodb
+
+  # Entity History Service Containers
+  entity-history-service:
+    image: ${ENTITY_HISTORY_SERVICE_IMAGE:?err}
+    environment:
+      SERVICE_MESH_HOST: http://wildbreeze-linkerd:4140
+    depends_on:
+      - wildbreeze-mysql
+
+  # Users Service Containers
+  users-service:
+    depends_on:
+      - wildbreeze-mongodb
+    image: ${USERS_SERVICE_IMAGE:?err}
+
+  # Proxy Service Containers
+  proxy-service:
+    depends_on:
+      - wildbreeze-mongodb
+    image: ${PROXY_SERVICE_IMAGE:?err}
+
+  # RabbitMQ container
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbitmq-lib-volume:/var/lib/rabbitmq/
+      - rabbitmq-log-volume:/var/log/rabbitmq/

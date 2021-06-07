@@ -1,0 +1,69 @@
+import {MessageBroker, getMessageBroker} from '../../MessageBroker';
+import {exchange1, exchange2} from './handler.ts.example';
+
+const messages: Array<object> = [{documentType: 'Type 1', docId: 2}, 
+        {documentType: 'Type 2', docContnet: {a: 'a', b: 'b'}}, {documentType: 'Type 3', docId: 33}, 
+        {documentType: 'Type 4', docContnetIndex: 2}];
+
+const routes1: Array<string> = ['wildbreeze.highfive.hfd.added', 
+    'wildbreeze.highfive.hfd.deleted', 'wildbreeze.highfive.note.added', 'wildbreeze.highfive.note.deleted','wildbreeze.highfive.note.updated',
+    'wildbreeze.highfive.reaction.updated', 'wildbreeze.highfive.hfd.updated', 'wildbreeze.highfive.reaction.deleted', 'wildbreeze.highfive.reaction.added'];
+    
+const routes2: Array<string> = ['wildbreeze.users.user.added', 
+        'wildbreeze.users.user.online', 'wildbreeze.users.user.offline', 
+        'wildbreeze.users.user.deleted', 'wildbreeze.users.user.updated'];
+    
+const url = 'amqp://localhost';
+    
+function getRandomMessage(source: Array<object>): object{
+    const index = getRandomIntInclusive(0, source.length-1);
+    return source[index];
+}
+
+function getRandomRoute(source: Array<string>) : string {
+    const index = getRandomIntInclusive(0, source.length-1);
+    return source[index];
+}
+function getRandomIntInclusive(min: number, max: number) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
+}
+
+async function init () {
+    
+
+    const producer1: MessageBroker = await getMessageBroker(url);
+    const producer2: MessageBroker = await getMessageBroker(url);
+    producer1.createExchange(exchange1);
+    producer2.createExchange(exchange2);
+
+    setInterval (() => {
+        const route: string = getRandomRoute(routes1);
+        const message =  getRandomMessage(messages);
+        producer1.publishMessage(route, message)
+        console.log('sent\nmessage:', message, '\nwith topic of: ', route, '\n')
+    }, 4000);
+    
+    setInterval (() => {
+        const route: string = getRandomRoute(routes2);
+        const message =  getRandomMessage(messages);
+        producer2.publishMessage(route, message)
+        console.log('sent\nmessage:', message, '\nwith topic of: ', route, '\n')
+    }, 7000);
+
+    setInterval (() => {
+        const message =  getRandomMessage(messages);
+        producer1.broadcast(message)
+        console.log('broadcast\nmessage:', message, '\n')
+    }, 15000); 
+    
+    setInterval (() => {
+        const message =  getRandomMessage(messages);
+        producer2.broadcast(message)
+        console.log('broadcast\nmessage:', message, '\n')
+    }, 20000); 
+
+}
+
+init();

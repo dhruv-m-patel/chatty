@@ -1,0 +1,71 @@
+{
+  "name": "@alcumus/services",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": ">= 14.15.5",
+    "npm": ">= 6.14.11"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-cli": "^4.0.4",
+    "@jest-mock/express": "^1.4.1",
+    "@types/jest": "^26.0.22",
+    "@types/mongoose": "^5.10.5",
+    "@types/morgan": "^1.9.2",
+    "@types/node": "^14.14.37",
+    "@types/swagger-ui-express": "^4.1.2",
+    "@types/uuid": "^8.3.0",
+    "@typescript-eslint/eslint-plugin": "^4.21.0",
+    "@typescript-eslint/parser": "^4.21.0",
+    "dotenv": "^8.2.0",
+    "eslint": "^7.24.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.3.5",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-standard": "^5.0.0",
+    "husky": "^4.3.6",
+    "jest": "26.6.0",
+    "lerna": "^4.0.0",
+    "lint-staged": "^10.5.4",
+    "prettier": "^2.2.1",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^26.5.4",
+    "typescript": "^4.2.4",
+    "cli-glob": "^0.1.0"
+  },
+  "lint-staged": {
+    "**/*": [
+      "prettier --write --ignore-unknown",
+      "eslint . --fix"
+    ]
+  },
+  "scripts": {
+    "preseed": "lerna run --stream preseed",
+    "seed": "npm run preseed; lerna run --stream seed",
+    "docker:up": "docker volume create --name=wildbreeze-mongodb-volume && docker volume create --name=wildbreeze-mysql-volume && docker-compose up --build -d",
+    "docker:down": "docker-compose down -v --remove-orphans",
+    "bootstrap": "lerna bootstrap --hoist",
+    "build": "lerna run build",
+    "clean": "lerna clean -y",
+    "diff": "lerna diff",
+    "publish": "lerna version --conventional-commits",
+    "start": "lerna run start --stream -- -- dotenv_config_path=../../.env",
+    "start-dev": "lerna run start-dev --stream -- -- dotenv_config_path=../../.env",
+    "test": "lerna run test --stream",
+    "test:docker:up": "docker-compose -f docker-compose.test.yml up -d",
+    "test:docker:down": "docker-compose -f docker-compose.test.yml down",
+    "test:debug": "DEBUG=swagger-express-validator lerna run test --stream",
+    "test:ci": "lerna run test:ci --stream",
+    "lint": "eslint . && npm run lint:spec",
+    "lint:spec": "glob '**/src/api/**/*.yaml' | xargs -n1 npx swagger-cli validate",
+    "pretest": "jest --clearCache",
+    "postinstall": "npm run bootstrap",
+    "prettier:format": "prettier --write .",
+    "prettier:verify": "prettier --check .",
+    "preversion": "npm run build && npm run test",
+    "postversion": "git push --no-verify && git tag --points-at HEAD | xargs -n1 git push --no-verify origin"
+  }
+}

@@ -1,0 +1,77 @@
+name: build
+on:
+  push:
+    branches: ['**']
+    tags-ignore: ['@**']
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+      - name: Install packages
+        run: npm ci && npm run clean && npm run bootstrap
+      - name: Verify code formatting
+        run: npm run prettier:verify
+      - name: Lint Code
+        run: npm run lint
+      - name: Build app
+        run: npm run build
+      - name: Docker Up
+        run: npm run test:docker:up
+      - name: Run tests
+        run: npm run test:ci
+      - name: Docker Down
+        run: npm run test:docker:down
+  build-docker-image:
+    needs: [build]
+    # This job will only be run for tag pushes
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Extract service, version and tag
+        id: extract-metadata
+        run: |
+          # For a ref '/refs/tags/service-name@1.0.0' => service-name@1.0.0 will be extracted
+          echo "GITHUB_REF => '$GITHUB_REF'"
+          export tag=`perl -e 'print ($ENV{GITHUB_REF} =~ "refs\/tags\/(.*)");'`
+          echo "TAG => '$tag'"
+          # For a tag 'service-name@1.0.0' => service-name will be extracted
+          service=`perl -e 'print ($ENV{tag} =~ "([^@]*)@.*");'`
+          echo "SERVICE => '$service'"
+          # For a tag 'service-name@1.0.0' => 1.0.0 will be extracted
+          version=`perl -e 'print ($ENV{tag} =~ "[^@]*@(.*)");'`
+          echo "VERSION => '$version'"
+          docker_tag="$service-$version"
+          echo "DOCKER_TAG => '$docker_tag'"
+          echo ::set-output name=SERVICE::${service}
+          echo ::set-output name=VERSION::${version}
+          echo ::set-output name=TAG::${tag}
+          echo ::set-output name=DOCKER_TAG::${docker_tag}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build and push
+        id: docker-build
+        uses: docker/build-push-action@v2
+        env:
+          DOCKER_BUILDKIT: 1 # Enable buildx https://docs.docker.com/buildx/working-with-buildx/
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: wildbreeze
+        with:
+          context: .
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.extract-metadata.outputs.DOCKER_TAG }}
+          file: ./microservices/${{ steps.extract-metadata.outputs.SERVICE }}/Dockerfile
