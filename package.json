@@ -4,7 +4,7 @@
   "description": "Showcase of RESTful Microservices internally communicating over gRPC",
   "main": "index.js",
   "scripts": {
-    "start": "lerna run start",
+    "start": "lerna run start --stream",
     "clean": "lerna clean -y",
     "bootstrap": "lerna bootstrap --hoist"
   },
