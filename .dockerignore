@@ -1,7 +1,0 @@
-readme.md
-node_modules
-package-lock.json
-.prettier*
-.eslint*
-.gitignore
-.huskyrc

@@ -1,7 +1,1 @@
-node_modules
-build/
-.env
-.DS_Store
-*.orig
-*.log
-disco/
+node_modules/

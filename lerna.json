@@ -1,9 +1,4 @@
 {
-  "packages": ["microservices/*", "packages/*"],
-  "version": "independent",
-  "command": {
-    "version": {
-      "push": false
-    }
-  }
+  "packages": ["services/*", "packages/*"],
+  "version": "0.0.0"
 }
