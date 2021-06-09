@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package services;
+
+message Request {
+  string name = 1;
+}
+
+message Response {
+  string message = 1;
+}
+
+// Service 1 operations
+service Service1 {
+  rpc GetMessage (Request) returns (Response) {}
+}
+
+// Service 2 operations
+service Service2 {
+  rpc GetMessage (Request) returns (Response) {}
+}

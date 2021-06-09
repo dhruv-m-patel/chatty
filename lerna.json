@@ -1,4 +1,4 @@
 {
-  "packages": ["services/*", "packages/*"],
+  "packages": ["services/*", "packages/*", "grpc-registry"],
   "version": "0.0.0"
 }
