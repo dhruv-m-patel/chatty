@@ -1,0 +1,18 @@
+{
+  "name": "grpc-registry",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"grpc package does not have any tests yet\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.3.2",
+    "@grpc/proto-loader": "^0.6.2",
+    "@malijs/logger": "^0.6.0",
+    "@malijs/onerror": "^0.3.1",
+    "mali": "^0.43.0"
+  }
+}
